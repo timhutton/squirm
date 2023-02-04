@@ -1,0 +1,50 @@
+<html>
+<head>
+<link rel="stylesheet" href="../style.css" type="text/css">
+<title>what we can do with Squirm</title>
+</head>
+<body>
+
+<div>
+<h1>what we can do with Squirm</h1>
+
+<h2>Current situation:</h2>
+<p>
+Basic Squirm has no concept of control. There are rules that say where a cell
+can and cannot move to but no rules that say which choice to make. In the applet
+on the <i>how Squirm works</i> page the cells choose
+at random from the moves available to them.
+<p>
+The applet on the Squirm front page, however, demonstrates two types of behaviour. The
+large creature (400 cells) moves at random while the small creature (9 cells) heads
+steadily downwards. This is one of the simplest non-random behaviours that can be 
+implemented - where a cell has a choice of squares to move to, it chooses the one that is 
+nearest the bottom. 
+<p>
+An even simpler behaviour is for each cell not to move at all - this results in static blocks
+of cells that act as obstacles for other creatures.
+<p>
+Explore the Squirm worlds from the front page, send in suggestions for Squirm worlds you want to 
+see. Hopefully soon the Squirm applets will be controllable, so you can play with different
+configurations yourself.
+<p>
+<h2>Future directions:</h2>
+<p>
+Consider that at every time step each and every cell has a choice of where to move to (or whether
+to stay still). Different tactics give vastly different overall behaviours. Imagine the strategy
+being different for different parts of a creature, or for the strategy to be decided on the fly
+by a central brain, or in response to local stimuli such as the presence of enemies. Imagine the 
+control being evolved over time, with the most successful strategies being retained.
+<p>
+Squirm as it stands at the moment is more of a framework for a potential artificial life simulator
+than anything else. It demonstrates how flexibility of form can be achieved in a computationally
+efficient manner. 
+<p>
+The java source for Squirm is available here: <a href="squirm.zip">squirm.zip</a> (7k). Compile using Sun's JDK (<a href="http://java.sun.com/products/">http://java.sun.com/products/</a>) with the command <b>javac *.java</b> and then load the html file into a java-enabled browser. Contact me with any questions: <a href="mailto:tim.hutton@gmail.com">tim.hutton@gmail.com</a>.
+<p>
+<hr>
+<a href="../index.html"><< back to the Squirm homepage</a>
+
+</div>
+</body>
+</html>

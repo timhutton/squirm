@@ -1,0 +1,11 @@
+body { color: black; font-family: verdana, sans-serif;  font-size: 13px;}
+H1 { font-weight: bold; font-size: 22; color: white;  background: silver;
+position:relative;left:-10px;padding-left: 10px; padding-top:10px;padding-bottom:10px;
+padding-right:10px}
+H2 { color: teal; font-size: 18px }
+h3 { color: teal; font-size: 16px }
+div { position: absolute; width:310px; margin-left:100px;}
+A:link { text-decoration: none; font-weight: bold }
+A:active { text-decoration: none;  font-weight: bold}
+A:visited { text-decoration: none;  font-weight: bold} 
+p { text-align: justify }

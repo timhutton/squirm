@@ -1,0 +1,170 @@
+<html>
+<head>
+<link rel="stylesheet" href="../style.css" type="text/css">
+<title>how Squirm Works</title>
+</head>
+<body>
+
+<div>
+<h1>how Squirm works</h1>
+
+<p>
+Squirm is a variant of Conway's Game of Life. 
+<p>
+Squirm attempts to model simple amoeba-like creatures by enforcing cell adhesion
+rules on a square grid.
+</p>
+
+<h2>The Rules</h2>
+
+<p>
+Squirm works on a square grid, with each square either containing a cell or 
+being empty. Each cell belongs to one creature.
+<p>
+At each time step, every cell can either stay where it is or move to one
+of the empty squares around it (if there are any).
+<p>
+Squirm creatures stick together, their cells don't fly apart. This is enforced by only 
+allowing moves that maintain 4-connectivity. Here are some examples:
+<p>
+
+<font face="impact">
+<center>
+<table width=100 height=100>
+<tr><td bgcolor="chocolate" align=center>1<td bgcolor="chocolate" align=center>2<td bgcolor="beige" align=center>3
+<tr><td bgcolor="beige" align=center>0<td bgcolor="chocolate" align=center>8<td bgcolor="beige" align=center>4
+<tr><td bgcolor="beige" align=center>7<td bgcolor="beige" align=center>6<td bgcolor="beige" align=center>5
+</table>
+</center>
+</font>
+<p>
+In the grid above the centre cell (8) has two neighbours (1 and 2). The squares 0,3,4,5,6,7
+are empty, but only a move to square 0 or square 3 keeps the cells connected.
+<p>
+<font face="impact">
+<center>
+<table width=100 height=100>
+<tr><td bgcolor="beige" align=center>1<td bgcolor="chocolate" align=center>2<td bgcolor="chocolate" align=center>3
+<tr><td bgcolor="beige" align=center>0<td bgcolor="chocolate" align=center>8<td bgcolor="chocolate" align=center>4
+<tr><td bgcolor="beige" align=center>7<td bgcolor="beige" align=center>6<td bgcolor="chocolate" align=center>5
+</table>
+</center>
+</font>
+<p>
+In the above example the only valid moves are to square 1 or square 6.
+<p>
+<font face="impact">
+<center>
+<table width=100 height=100>
+<tr><td bgcolor="beige" align=center>1<td bgcolor="chocolate" align=center>2<td bgcolor="beige" align=center>3
+<tr><td bgcolor="beige" align=center>0<td bgcolor="chocolate" align=center>8<td bgcolor="beige" align=center>4
+<tr><td bgcolor="beige" align=center>7<td bgcolor="chocolate" align=center>6<td bgcolor="chocolate" align=center>5
+</table>
+</center>
+</font>
+<p>
+In this example, any move of the centre cell would leave the cells unconnected, so this
+cell is unable to move.
+<p>
+<font face="impact">
+<center>
+<table width=100 height=100>
+<tr><td bgcolor="beige" align=center>1<td bgcolor="beige" align=center>2<td bgcolor="beige" align=center>3
+<tr><td bgcolor="chocolate" align=center>0<td bgcolor="chocolate" align=center>8<td bgcolor="beige" align=center>4
+<tr><td bgcolor="beige" align=center>7<td bgcolor="beige" align=center>6<td bgcolor="chocolate" align=center>5
+</table>
+</center>
+</font>
+<p>
+In this example, the cell (in square 8) has one neighbour (0). The cell in square 5
+is not connected to the cell in square 8 and is ignored. Valid moves are: 1,7.
+<p>
+The following algorithm implements the rules:
+
+<ol>
+<li><p>find all the cells connected to the centre one (connected means next to it or next to a connected
+cell).</p>
+<li><p>try moving to each empty square, find the cells that are now connected to our cell.</p>
+<li><p>if there are <i>any</i> cells not connected now that were connected before then this
+move is not valid.</p>
+</ol>
+<p>
+Here is a worked example:
+<p>
+<font face="impact">
+<center>
+<table width=100 height=100>
+<tr><td bgcolor="chocolate" align=center>1<td bgcolor="chocolate" align=center>2<td bgcolor="beige" align=center>3
+<tr><td bgcolor="beige" align=center>0<td bgcolor="chocolate" align=center>8<td bgcolor="beige" align=center>4
+<tr><td bgcolor="chocolate" align=center>7<td bgcolor="beige" align=center>6<td bgcolor="beige" align=center>5
+</table>
+</center>
+</font>
+<p>
+initially_connected = { 1, 2 }
+<p>
+empty squares = { 0, 3, 4, 5, 6 }
+<p>
+A move to square 0 leaves 1,2,7 connected, none unconnected. There are none now unconnected that
+were connected before hence this move is valid.
+<p>
+A move to square 3 leaves 1,2 connected, 7 unconnected. The only unconnected cell (7) was not connected
+before hence this move is valid.
+<p>
+A move to squares 4 or 5 leaves 1,2,7 unconnected. Of these, 1 and 2 were connected before, hence 
+this move is not valid.
+<p>
+A move to square 6 leaves 7 connected, 1,2 unconnected. There are cells now unconnected that
+were connected before hence this move is invalid.
+<p>
+There are therefore 2 valid places to move to: square 0 or square 3.
+<p>
+
+<h2>Applying The Rules</h2>
+<p>
+The rules determine where a cell can move to, based on what is within the 3x3 neighbourhood.
+The aim is to maintain connectivity within each creature, so the rules only apply to the
+cells that belong to the creature the centre cell is a member of. Any cells of a different
+creature within the area are treated as obstacles - the cell cannot move to a square occupied 
+by the cell of a different creature (or indeed its own).
+<p>
+One by one the cells in the world get a chance to move. Where there are multiple moves
+available to a cell it chooses at random (although other strategies are possible, as we
+will see).
+<p>
+Below is a running applet containing a simple Squirm world. The world has three creatures
+with 5, 10 and 15 cells.
+<p>
+<center>
+<applet code="Squirm.class" width=301 height=101></applet>
+</center>
+<p>
+If nothing is happening above then your browser is not enabled to show java applets. Try using
+a different browser or changing your browser settings.
+<p>
+In this example, each creature has its own colour. Hit Reload/Refresh in your browser 
+to restart the simulation with different colours.
+<p>
+<h2>Observations</h2>
+<p>
+The rules are having the effect intended, that the creatures are amazingly flexible and
+reconfigurable without the cells coming apart. Also, because the rules only use information
+local to each cell the simulation can run very quickly. 
+<p>
+One interesting implication of the rules is that long loops and chains of cells cannot be broken,
+because each cell maintains connectivity with the ones around it. However, loops can
+establish themselves because the notion of connectivity is determined only by who each cell is
+next to. This means that if a small creature is <i>swallowed</i> by a larger one then it
+can never escape! The applet on the front page demonstrates this sometimes.
+<p>
+
+<p align=right><a href="../what/index.html">what we can do with Squirm >></a>
+
+<p>
+<hr>
+<a href="../index.html"><< back to the Squirm homepage</a>
+
+</div>
+
+</body>
+</html>
