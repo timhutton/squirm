@@ -2,6 +2,8 @@
 <head>
 <link rel="stylesheet" href="../style.css" type="text/css">
 <title>how Squirm Works</title>
+<script src="https://cjrtnc.leaningtech.com/2.3/loader.js"></script>
+<script>cheerpjInit({enablePreciseAppletArchives:true});</script>
 </head>
 <body>
 
@@ -9,7 +11,7 @@
 <h1>how Squirm works</h1>
 
 <p>
-Squirm is a variant of Conway's Game of Life. 
+Squirm is a variant of Conway's Game of Life.
 <p>
 Squirm attempts to model simple amoeba-like creatures by enforcing cell adhesion
 rules on a square grid.
@@ -18,13 +20,13 @@ rules on a square grid.
 <h2>The Rules</h2>
 
 <p>
-Squirm works on a square grid, with each square either containing a cell or 
+Squirm works on a square grid, with each square either containing a cell or
 being empty. Each cell belongs to one creature.
 <p>
 At each time step, every cell can either stay where it is or move to one
 of the empty squares around it (if there are any).
 <p>
-Squirm creatures stick together, their cells don't fly apart. This is enforced by only 
+Squirm creatures stick together, their cells don't fly apart. This is enforced by only
 allowing moves that maintain 4-connectivity. Here are some examples:
 <p>
 
@@ -111,7 +113,7 @@ were connected before hence this move is valid.
 A move to square 3 leaves 1,2 connected, 7 unconnected. The only unconnected cell (7) was not connected
 before hence this move is valid.
 <p>
-A move to squares 4 or 5 leaves 1,2,7 unconnected. Of these, 1 and 2 were connected before, hence 
+A move to squares 4 or 5 leaves 1,2,7 unconnected. Of these, 1 and 2 were connected before, hence
 this move is not valid.
 <p>
 A move to square 6 leaves 7 connected, 1,2 unconnected. There are cells now unconnected that
@@ -125,7 +127,7 @@ There are therefore 2 valid places to move to: square 0 or square 3.
 The rules determine where a cell can move to, based on what is within the 3x3 neighbourhood.
 The aim is to maintain connectivity within each creature, so the rules only apply to the
 cells that belong to the creature the centre cell is a member of. Any cells of a different
-creature within the area are treated as obstacles - the cell cannot move to a square occupied 
+creature within the area are treated as obstacles - the cell cannot move to a square occupied
 by the cell of a different creature (or indeed its own).
 <p>
 One by one the cells in the world get a chance to move. Where there are multiple moves
@@ -136,20 +138,20 @@ Below is a running applet containing a simple Squirm world. The world has three 
 with 5, 10 and 15 cells.
 <p>
 <center>
-<applet code="Squirm.class" width=301 height=101></applet>
+<cheerpj-applet code="Squirm.class" width=301 height=101></cheerpj-applet>
 </center>
 <p>
 If nothing is happening above then your browser is not enabled to show java applets. Try using
 a different browser or changing your browser settings.
 <p>
-In this example, each creature has its own colour. Hit Reload/Refresh in your browser 
+In this example, each creature has its own colour. Hit Reload/Refresh in your browser
 to restart the simulation with different colours.
 <p>
 <h2>Observations</h2>
 <p>
 The rules are having the effect intended, that the creatures are amazingly flexible and
 reconfigurable without the cells coming apart. Also, because the rules only use information
-local to each cell the simulation can run very quickly. 
+local to each cell the simulation can run very quickly.
 <p>
 One interesting implication of the rules is that long loops and chains of cells cannot be broken,
 because each cell maintains connectivity with the ones around it. However, loops can
