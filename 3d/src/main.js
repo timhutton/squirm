@@ -5,6 +5,13 @@ window.onload = function() {
     const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
     document.body.appendChild( renderer.domElement );
 
+    let startstop_button = document.createElement("button");
+    startstop_button.innerHTML = "Pause / Run";
+    startstop_button.onclick = toggle_running;
+    startstop_button.style.width = "300px";
+    startstop_button.style.height = "100px";
+    document.body.appendChild(startstop_button);
+
     {
         const color = 0xFFFFFF;
         const intensity = 1;
@@ -251,13 +258,17 @@ window.onload = function() {
         }
     }
 
+    function toggle_running() {
+        running = !running;
+        if(running)
+            animate();
+    }
+
     document.addEventListener("keydown", onDocumentKeyDown, false);
     function onDocumentKeyDown(event) {
         switch(event.key) {
             case ' ':
-                running = !running;
-                if(running)
-                    animate();
+                toggle_running();
                 break;
             case '+':
                 if(running)
