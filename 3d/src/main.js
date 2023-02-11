@@ -30,18 +30,18 @@ window.onload = function() {
     const cube_material = new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: false } );
     let cube = new THREE.BoxGeometry(1,1,1);
 
-    let X = 5;
-    let Y = 5;
-    let Z = 1;
-    let N = 2;
+    X = 20;
+    Y = 20;
+    Z = 20;
+    N = 100;
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
 
     // initialize the occupancy grid, and two scratchpads
-    let grid = [];
-    let pad = [];
-    let pad2 = [];
+    grid = [];
+    pad = [];
+    pad2 = [];
     for(let x = 0; x < X; x++) {
         grid[x] = [];
         pad[x] = [];
@@ -102,7 +102,7 @@ window.onload = function() {
             y0: Math.max(0, pos[i].y - 1),
             y1: Math.min(Y-1, pos[i].y + 1),
             z0: Math.max(0, pos[i].z - 1),
-            z1: Math.min(Y-1, pos[i].z + 1) };
+            z1: Math.min(Z-1, pos[i].z + 1) };
         let neighborhood = [];
         for(let x = bounds.x0; x <= bounds.x1; x++) {
             for(let y = bounds.y0; y <= bounds.y1; y++) {
@@ -178,7 +178,7 @@ window.onload = function() {
             let p = neighborhood[iNeighborhood];
             if(grid[p.x][p.y][p.z] == 0)
                 move_candidates.push(p);
-            else if(p.x != pos[i].x && p.y != pos[i].y && p.z != pos[i].z)
+            else if(p.x != pos[i].x || p.y != pos[i].y || p.z != pos[i].z)
                 others.push(p);
         }
         // find which positions were connected to the central cube before any move
@@ -192,7 +192,6 @@ window.onload = function() {
             for(let iOther = 0; iOther < others.length; iOther++) {
                 let connectivity_before = pad[others[iOther].x][others[iOther].y][others[iOther].z];
                 let connectivity_after = pad2[others[iOther].x][others[iOther].y][others[iOther].z];
-                console.log(connectivity_before, connectivity_after);
                 if(connectivity_before == 1 && connectivity_after == 2) {
                     found_disconnection = true;
                     break;
@@ -207,6 +206,8 @@ window.onload = function() {
     function move_cube(i) {
         // pick a random move
         const move_candidates = get_move_candidates(i);
+        if(move_candidates.length == 0)
+            return false;
         const iMove = Math.floor(Math.random() * move_candidates.length);
         const move = move_candidates[iMove];
         // move
