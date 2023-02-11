@@ -63,7 +63,7 @@ window.onload = function() {
             z = Math.floor(Math.random() * Z);
         } while(grid[x][y][z] != 0);
         grid[x][y][z] = 1;
-        pos[i] = new THREE.Vector3(x, y, z);
+        pos[i] = {x: x, y: y, z: z};
     }
 
     orbit_controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -86,17 +86,32 @@ window.onload = function() {
     }
 
     function move_cube(i) {
-        pos[i].x += Math.floor(Math.random() * 3) - 1;
-        pos[i].y += Math.floor(Math.random() * 3) - 1;
-        pos[i].z += Math.floor(Math.random() * 3) - 1;
+        // pick a random step
+        let x = pos[i].x + Math.floor(Math.random() * 3) - 1;
+        let y = pos[i].y + Math.floor(Math.random() * 3) - 1;
+        let z = pos[i].z + Math.floor(Math.random() * 3) - 1;
+        // reject if off-grid or occupied
+        if( x < 0 || x >= X || y < 0 || y >= Y || z < 0 || z >= Z )
+            return false;
+        if(grid[x][y][z] > 0)
+            return false;
+        // move
+        grid[pos[i].x][pos[i].y][pos[i].z] = 0;
+        grid[x][y][z] = 1;
+        pos[i].x = x;
+        pos[i].y = y;
+        pos[i].z = z;
+        return true;
     }
 
     function move_cubes() {
         for(let i = 0; i < N; i++) {
-            move_cube(i);
-            dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
-            dummy.updateMatrix();
-            mesh.setMatrixAt( i, dummy.matrix );
+            let moved = move_cube(i);
+            if(moved) {
+                dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
+                dummy.updateMatrix();
+                mesh.setMatrixAt( i, dummy.matrix );
+            }
         }
     }
 
