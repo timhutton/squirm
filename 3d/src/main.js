@@ -85,21 +85,23 @@ window.onload = function() {
         renderer.render( scene, camera );
     }
 
+    function move_cube(i) {
+        pos[i].x += Math.floor(Math.random() * 3) - 1;
+        pos[i].y += Math.floor(Math.random() * 3) - 1;
+        pos[i].z += Math.floor(Math.random() * 3) - 1;
+    }
+
     function move_cubes() {
         for(let i = 0; i < N; i++) {
-            pos[i].x += Math.floor(Math.random() * 3) - 1;
-            pos[i].y += Math.floor(Math.random() * 3) - 1;
-            pos[i].z += Math.floor(Math.random() * 3) - 1;
+            move_cube(i);
+            dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
+            dummy.updateMatrix();
+            mesh.setMatrixAt( i, dummy.matrix );
         }
     }
 
     function animate() {
         move_cubes();
-        for(let i = 0; i < N; i++) {
-            dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
-            dummy.updateMatrix();
-            mesh.setMatrixAt( i, dummy.matrix );
-        }
         mesh.instanceMatrix.needsUpdate = true;
         render();
 
