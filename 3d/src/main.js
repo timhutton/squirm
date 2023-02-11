@@ -33,7 +33,7 @@ window.onload = function() {
     let X = 10;
     let Y = 10;
     let Z = 10;
-    let N = 400;
+    let N = 40;
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
@@ -42,9 +42,28 @@ window.onload = function() {
     camera.position.y = 46;
     camera.position.z = 65;
 
+    // initialize empty grid
+    let grid = [];
+    for(let x = 0; x < X; x++) {
+        grid[x] = [];
+        for(let y = 0; y < Y; y++) {
+            grid[x][y] = []
+            for(let z = 0; z < Z; z++) {
+                grid[x][y][z] = 0;
+            }
+        }
+    }
+
+    // add cubes at random unoccupied locations
     let pos = [];
     for(let i = 0; i < N; i++) {
-        pos[i] = new THREE.Vector3(Math.floor(Math.random() * X), Math.floor(Math.random() * Y), Math.floor(Math.random() * Z));
+        do {
+            x = Math.floor(Math.random() * X);
+            y = Math.floor(Math.random() * Y);
+            z = Math.floor(Math.random() * Z);
+        } while(grid[x][y][z] != 0);
+        grid[x][y][z] = 1;
+        pos[i] = new THREE.Vector3(x, y, z);
     }
 
     orbit_controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -60,17 +79,23 @@ window.onload = function() {
     renderer.domElement.addEventListener( 'touchend',  render, false );
     renderer.domElement.addEventListener( 'touchcancel',  render, false );
     renderer.domElement.addEventListener( 'wheel',  render, false );
+    const dummy = new THREE.Object3D();
 
     function render() {
         renderer.render( scene, camera );
     }
 
-    function animate() {
-        const dummy = new THREE.Object3D();
+    function move_cubes() {
         for(let i = 0; i < N; i++) {
             pos[i].x += Math.floor(Math.random() * 3) - 1;
             pos[i].y += Math.floor(Math.random() * 3) - 1;
             pos[i].z += Math.floor(Math.random() * 3) - 1;
+        }
+    }
+
+    function animate() {
+        move_cubes();
+        for(let i = 0; i < N; i++) {
             dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
             dummy.updateMatrix();
             mesh.setMatrixAt( i, dummy.matrix );
@@ -78,7 +103,7 @@ window.onload = function() {
         mesh.instanceMatrix.needsUpdate = true;
         render();
 
-        const fps = 60;
+        const fps = 30;
         setTimeout(() => {
             requestAnimationFrame(animate);
         }, 1000 / fps);
