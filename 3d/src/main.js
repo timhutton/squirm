@@ -30,31 +30,35 @@ window.onload = function() {
     const cube_material = new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: false } );
     let cube = new THREE.BoxGeometry(1,1,1);
 
-    let X = 20;
-    let Y = 20;
-    let Z = 20;
-    let N = 40;
+    let X = 5;
+    let Y = 5;
+    let Z = 1;
+    let N = 2;
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
 
-    camera.position.x = 15;
-    camera.position.y = 26;
-    camera.position.z = 25;
-
-    // initialize empty grid
+    // initialize the occupancy grid, and two scratchpads
     let grid = [];
+    let pad = [];
+    let pad2 = [];
     for(let x = 0; x < X; x++) {
         grid[x] = [];
+        pad[x] = [];
+        pad2[x] = [];
         for(let y = 0; y < Y; y++) {
             grid[x][y] = []
+            pad[x][y] = []
+            pad2[x][y] = []
             for(let z = 0; z < Z; z++) {
                 grid[x][y][z] = 0;
+                pad[x][y][z] = 0;
+                pad2[x][y][z] = 0;
             }
         }
     }
 
-    function p(x, y, z) { return {x: x, y: y, z: z}; }
+    function p3(x, y, z) { return {x: x, y: y, z: z}; }
 
     // add cubes at random unoccupied locations
     let pos = [];
@@ -65,10 +69,13 @@ window.onload = function() {
             z = Math.floor(Math.random() * Z);
         } while(grid[x][y][z] != 0);
         grid[x][y][z] = 1;
-        pos[i] = p(x, y, z);
+        pos[i] = p3(x, y, z);
     }
 
     orbit_controls = new THREE.OrbitControls( camera, renderer.domElement );
+    camera.position.x = X / 2;
+    camera.position.y = Y / 2;
+    camera.position.z = Z * 7;
     camera.lookAt( X/2, Y/2, Z/2 );
     orbit_controls.target.set( X/2, Y/2, Z/2 );
 
@@ -87,24 +94,114 @@ window.onload = function() {
         renderer.render( scene, camera );
     }
 
-    function get_move_candidates(i) {
-        // return a list of the unoccupied cells within one step
-        const x0 = Math.max(0, pos[i].x - 1);
-        const x1 = Math.min(X-1, pos[i].x + 1);
-        const y0 = Math.max(0, pos[i].y - 1);
-        const y1 = Math.min(Y-1, pos[i].y + 1);
-        const z0 = Math.max(0, pos[i].z - 1);
-        const z1 = Math.min(Y-1, pos[i].z + 1);
-        let candidates = [];
-        for(let x = x0; x <= x1; x++) {
-            for(let y = y0; y <= y1; y++) {
-                for(let z = z0; z <= z1; z++) {
-                    if(grid[x][y][z] == 0)
-                        candidates.push(p(x, y, z));
+    function get_neighborhood(i) {
+        // return a list of the locations within the neighborhood of this cube, plus the bounds
+        const bounds = {
+            x0: Math.max(0, pos[i].x - 1),
+            x1: Math.min(X-1, pos[i].x + 1),
+            y0: Math.max(0, pos[i].y - 1),
+            y1: Math.min(Y-1, pos[i].y + 1),
+            z0: Math.max(0, pos[i].z - 1),
+            z1: Math.min(Y-1, pos[i].z + 1) };
+        let neighborhood = [];
+        for(let x = bounds.x0; x <= bounds.x1; x++) {
+            for(let y = bounds.y0; y <= bounds.y1; y++) {
+                for(let z = bounds.z0; z <= bounds.z1; z++) {
+                    neighborhood.push( p3(x, y, z) );
                 }
             }
         }
-        return candidates;
+        return [neighborhood, bounds];
+    }
+
+    function in_bounds(p, bounds) {
+        return p.x >= bounds.x0 && p.x <= bounds.x1 && p.y >= bounds.y0 && p.y <= bounds.y1 && p.z >= bounds.z0 && p.z <= bounds.z1;
+    }
+
+    function get_face_neighbors(p) {
+        return [p3(p.x-1, p.y, p.z), p3(p.x+1, p.y, p.z),
+                p3(p.x, p.y-1, p.z), p3(p.x, p.y+1, p.z),
+                p3(p.x, p.y, p.z-1), p3(p.x, p.y, p.z+1)];
+    }
+
+    function get_face_neighbors_within_bounds(p, bounds) {
+        let face_neighbors = get_face_neighbors(p);
+        let face_neighbors_within_bounds = [];
+        for(let iNeighbor = 0; iNeighbor < face_neighbors.length; iNeighbor++) {
+            if(in_bounds(face_neighbors[iNeighbor], bounds))
+                face_neighbors_within_bounds.push(face_neighbors[iNeighbor]);
+        }
+        return face_neighbors_within_bounds;
+    }
+
+    function find_connectivity(scratchpad, c, others, neighborhood, bounds) {
+        // fills scratchpad with 0 = empty, 1 = connected, 2 = disconnected for cubes in (c, others)
+        for(let iNeighborhood = 0; iNeighborhood < neighborhood.length; iNeighborhood++) {
+            let p = neighborhood[iNeighborhood];
+            scratchpad[p.x][p.y][p.z] = 0; // empty
+        }
+        scratchpad[c.x][c.y][c.z] = 1; // connected
+        for(let iOther = 0; iOther < others.length; iOther++) {
+            let p = others[iOther];
+            scratchpad[p.x][p.y][p.z] = 2; // disconnected (initially)
+        }
+        // spread connectivity until converged
+        let found_change = true;
+        while(found_change) {
+            found_change = false;
+            for(let x = bounds.x0; x <= bounds.x1; x++) {
+                for(let y = bounds.y0; y <= bounds.y1; y++) {
+                    for(let z = bounds.z0; z <= bounds.z1; z++) {
+                        if(scratchpad[x][y][z] != 1)
+                            continue; // nothing to spread
+                        let face_neighbors_within_bounds = get_face_neighbors_within_bounds(p3(x,y,z), bounds);
+                        for(let iNeighbor = 0; iNeighbor < face_neighbors_within_bounds.length; iNeighbor++) {
+                            let p = face_neighbors_within_bounds[iNeighbor];
+                            if(scratchpad[p.x][p.y][p.z] == 2) {
+                                scratchpad[p.x][p.y][p.z] = 1; // is now connected
+                                found_change = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function get_move_candidates(i) {
+        // collect the list of the places we can move to
+        let neighborhood, bounds;
+        [neighborhood, bounds] = get_neighborhood(i);
+        let move_candidates = [];
+        let others = [];
+        for(let iNeighborhood = 0; iNeighborhood < neighborhood.length; iNeighborhood++) {
+            let p = neighborhood[iNeighborhood];
+            if(grid[p.x][p.y][p.z] == 0)
+                move_candidates.push(p);
+            else if(p.x != pos[i].x && p.y != pos[i].y && p.z != pos[i].z)
+                others.push(p);
+        }
+        // find which positions were connected to the central cube before any move
+        find_connectivity(pad, pos[i], others, neighborhood, bounds);
+        // for each move candidate, see if it disconnects any cube
+        let allowed_moves = [];
+        for(let iMove = 0; iMove < move_candidates.length; iMove++) {
+            let move = move_candidates[iMove];
+            find_connectivity(pad2, move, others, neighborhood, bounds);
+            let found_disconnection = false;
+            for(let iOther = 0; iOther < others.length; iOther++) {
+                let connectivity_before = pad[others[iOther].x][others[iOther].y][others[iOther].z];
+                let connectivity_after = pad2[others[iOther].x][others[iOther].y][others[iOther].z];
+                console.log(connectivity_before, connectivity_after);
+                if(connectivity_before == 1 && connectivity_after == 2) {
+                    found_disconnection = true;
+                    break;
+                }
+            }
+            if(!found_disconnection)
+                allowed_moves.push(move);
+        }
+        return allowed_moves;
     }
 
     function move_cube(i) {
