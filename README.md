@@ -10,3 +10,7 @@ Live demo: https://timhutton.github.io/squirm
 https://user-images.githubusercontent.com/647092/216794674-185f8fe0-b187-4127-8a01-7b486e64fde8.mp4
 
 If I get time I will port the code to something more modern.
+
+## Experimental ##
+
+3D version: https://timhutton.github.io/squirm/3d
