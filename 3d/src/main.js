@@ -9,34 +9,39 @@ window.onload = function() {
         const color = 0xFFFFFF;
         const intensity = 1;
         const light = new THREE.PointLight(color, intensity);
-        light.position.set(0, 100, 40);
+        light.position.set(0, 1000, 400);
         scene.add(light);
     }
     {
         const color = 0x87CEEB;
         const intensity = 1;
         const light = new THREE.PointLight(color, intensity);
-        light.position.set(40, -30, -30);
+        light.position.set(400, -300, -300);
         scene.add(light);
     }
     {
         const color = 0xEB87CE;
         const intensity = 1;
         const light = new THREE.PointLight(color, intensity);
-        light.position.set(-40, -30, -30);
+        light.position.set(-400, -300, -300);
         scene.add(light);
     }
 
     const cube_material = new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: false } );
     let cube = new THREE.BoxGeometry(1,1,1);
 
-    X = 20;
-    Y = 20;
-    Z = 20;
-    N = 100;
+    X = 100;
+    Y = 100;
+    Z = 100;
+    S = 6;
+    N = S*S*S;
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
+
+    //let bounding_box = new THREE.Mesh(new THREE.BoxGeometry(X, Y, Z), new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: true } ));
+    //bounding_box.position.set(X/2, Y/2, Z/2);
+    //scene.add( bounding_box );
 
     // initialize the occupancy grid, and two scratchpads
     grid = [];
@@ -64,18 +69,18 @@ window.onload = function() {
     let pos = [];
     for(let i = 0; i < N; i++) {
         do {
-            x = Math.floor(Math.random() * X);
-            y = Math.floor(Math.random() * Y);
-            z = Math.floor(Math.random() * Z);
+            x = 47 + Math.floor(Math.random() * S);
+            y = 47 + Math.floor(Math.random() * S);
+            z = 47 + Math.floor(Math.random() * S);
         } while(grid[x][y][z] != 0);
         grid[x][y][z] = 1;
         pos[i] = p3(x, y, z);
     }
 
     orbit_controls = new THREE.OrbitControls( camera, renderer.domElement );
-    camera.position.x = X / 2;
-    camera.position.y = Y / 2;
-    camera.position.z = Z * 7;
+    camera.position.x = X / 2 + 3;
+    camera.position.y = Y / 2 + 1;
+    camera.position.z = Z/2 - 20;
     camera.lookAt( X/2, Y/2, Z/2 );
     orbit_controls.target.set( X/2, Y/2, Z/2 );
 
@@ -89,6 +94,11 @@ window.onload = function() {
     renderer.domElement.addEventListener( 'touchcancel',  render, false );
     renderer.domElement.addEventListener( 'wheel',  render, false );
     const dummy = new THREE.Object3D();
+
+    running = true;
+    iRender = 0;
+    steps_per_render = 1;
+    renders_per_step = 1;
 
     function render() {
         renderer.render( scene, camera );
@@ -231,15 +241,41 @@ window.onload = function() {
     }
 
     function animate() {
-        move_cubes();
-        mesh.instanceMatrix.needsUpdate = true;
-        render();
+        if(running) {
+            for(let iStep = 0; iStep < steps_per_render; iStep++)
+                move_cubes();
+            mesh.instanceMatrix.needsUpdate = true;
+            render();
 
-        const fps = 30;
-        setTimeout(() => {
             requestAnimationFrame(animate);
-        }, 1000 / fps);
+        }
     }
 
+    document.addEventListener("keydown", onDocumentKeyDown, false);
+    function onDocumentKeyDown(event) {
+        switch(event.key) {
+            case ' ':
+                running = !running;
+                if(running)
+                    animate();
+                break;
+            case '+':
+                if(running)
+                    steps_per_render *= 2;
+                break;
+            case '-':
+                if(running && steps_per_render > 1)
+                    steps_per_render /= 2;
+                break;
+        }
+    }
+
+    for(let i = 0; i < N; i++) {
+        dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
+        dummy.updateMatrix();
+        mesh.setMatrixAt( i, dummy.matrix );
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    render();
     animate();
 }
