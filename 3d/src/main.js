@@ -163,29 +163,21 @@ window.onload = function() {
             scratchpad[p.x][p.y][p.z] = 2; // disconnected (initially)
         }
         // spread connectivity until converged
-        let found_change = true;
-        while(found_change) {
-            found_change = false;
-            for(let x = bounds.x0; x <= bounds.x1; x++) {
-                for(let y = bounds.y0; y <= bounds.y1; y++) {
-                    for(let z = bounds.z0; z <= bounds.z1; z++) {
-                        if(scratchpad[x][y][z] != 1)
-                            continue; // nothing to spread
-                        let face_neighbors_within_bounds = get_face_neighbors_within_bounds(p3(x,y,z), bounds);
-                        for(let iNeighbor = 0; iNeighbor < face_neighbors_within_bounds.length; iNeighbor++) {
-                            let p = face_neighbors_within_bounds[iNeighbor];
-                            if(scratchpad[p.x][p.y][p.z] == 2) {
-                                scratchpad[p.x][p.y][p.z] = 1; // is now connected
-                                found_change = true;
-                            }
-                        }
-                    }
+        let last_added = [c];
+        while(last_added.length > 0) {
+            let p = last_added.shift();
+            let face_neighbors_within_bounds = get_face_neighbors_within_bounds(p, bounds);
+            for(let iNeighbor = 0; iNeighbor < face_neighbors_within_bounds.length; iNeighbor++) {
+                let p = face_neighbors_within_bounds[iNeighbor];
+                if(scratchpad[p.x][p.y][p.z] == 2) {
+                    scratchpad[p.x][p.y][p.z] = 1; // is now connected
+                    last_added.push(p);
                 }
             }
         }
     }
 
-    function get_move_candidates(i) {
+    function get_allowed_moves(i) {
         // collect the list of the places we can move to
         let neighborhood, bounds;
         [neighborhood, bounds] = get_neighborhood(i);
@@ -222,11 +214,11 @@ window.onload = function() {
 
     function move_cube(i) {
         // pick a random move
-        const move_candidates = get_move_candidates(i);
-        if(move_candidates.length == 0)
+        const allowed_moves = get_allowed_moves(i);
+        if(allowed_moves.length == 0)
             return false;
-        const iMove = Math.floor(Math.random() * move_candidates.length);
-        const move = move_candidates[iMove];
+        const iMove = Math.floor(Math.random() * allowed_moves.length);
+        const move = allowed_moves[iMove];
         // move
         grid[move.x][move.y][move.z] = grid[pos[i].x][pos[i].y][pos[i].z];
         grid[pos[i].x][pos[i].y][pos[i].z] = 0;
