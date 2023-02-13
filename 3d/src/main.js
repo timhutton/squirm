@@ -3,18 +3,29 @@ window.onload = function() {
     steps_text.innerHTML = "Steps: 0<br>Steps per render: 1";
     document.body.appendChild(steps_text);
 
+    let startstop_button = document.createElement("button");
+    startstop_button.innerHTML = "Pause / Run";
+    startstop_button.onclick = toggle_running;
+    startstop_button.style.width = "100px";
+    document.body.appendChild(startstop_button);
+
+    let run_faster_button = document.createElement("button");
+    run_faster_button.innerHTML = "Run faster";
+    run_faster_button.onclick = run_faster;
+    run_faster_button.style.width = "100px";
+    document.body.appendChild(run_faster_button);
+
+    let run_slower_button = document.createElement("button");
+    run_slower_button.innerHTML = "Run slower";
+    run_slower_button.onclick = run_slower;
+    run_slower_button.style.width = "100px";
+    document.body.appendChild(run_slower_button);
+
     const scene = new THREE.Scene();
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth * 0.8, window.innerHeight * 0.8 );
     const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
     document.body.appendChild( renderer.domElement );
-
-    let startstop_button = document.createElement("button");
-    startstop_button.innerHTML = "Pause / Run";
-    startstop_button.onclick = toggle_running;
-    startstop_button.style.width = "300px";
-    startstop_button.style.height = "100px";
-    document.body.appendChild(startstop_button);
 
     {
         const color = 0xFFFFFF;
@@ -138,9 +149,13 @@ window.onload = function() {
     iStep = 0;
     steps_per_render = 1;
 
+    function update_stats() {
+        steps_text.innerHTML = "Steps: " + iStep + "<br>Steps per render: " + steps_per_render;
+    }
+
     function render() {
         renderer.render( scene, camera );
-        steps_text.innerHTML = "Steps: " + iStep + "<br>Steps per render: " + steps_per_render;
+        update_stats();
     }
 
     function get_neighborhood(i) {
@@ -292,20 +307,15 @@ window.onload = function() {
             animate();
     }
 
-    document.addEventListener("keydown", onDocumentKeyDown, false);
-    function onDocumentKeyDown(event) {
-        switch(event.key) {
-            case ' ':
-                toggle_running();
-                break;
-            case '+':
-                if(running)
-                    steps_per_render *= 2;
-                break;
-            case '-':
-                if(running && steps_per_render > 1)
-                    steps_per_render /= 2;
-                break;
+    function run_faster() {
+        steps_per_render *= 2;
+        update_stats();
+    }
+
+    function run_slower() {
+        if(steps_per_render > 1) {
+            steps_per_render /= 2;
+            update_stats();
         }
     }
 
