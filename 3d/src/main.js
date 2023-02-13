@@ -45,8 +45,8 @@ window.onload = function() {
     let plane_geometry = new THREE.PlaneGeometry(X, Y);
     let plane1 = new THREE.Mesh(plane_geometry, plane_material);
     let plane2 = new THREE.Mesh(plane_geometry, plane_material);
-    plane1.position.set(X/2, Y/2, 0);
-    plane2.position.set(X/2, Y/2, Z);
+    plane1.position.set(X/2 - 0.5, Y/2 - 0.5, -0.5);
+    plane2.position.set(X/2 - 0.5, Y/2 - 0.5, Z - 0.5);
     scene.add( plane1 );
     scene.add( plane2 );
 
@@ -94,12 +94,24 @@ window.onload = function() {
 
     // add some blobs
     let N = 0;
-    N += add_blob(0,0,0,2,2,2,1);
-    N += add_blob(5,5,5,2,2,2,2);
+    N += add_blob(0,0,0,3,3,3,1);
+    N += add_blob(5,5,5,3,3,3,2);
 
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
+
+    const dummy = new THREE.Object3D();
+    let colors = [new THREE.Color(0xEEBB88), new THREE.Color(0x544EEBB)];
+    for(let i = 0; i < N; i++) {
+        dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
+        dummy.updateMatrix();
+        mesh.setMatrixAt( i, dummy.matrix );
+        let id = grid[pos[i].x][pos[i].y][pos[i].z];
+        mesh.setColorAt( i, colors[id - 1] );
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+
 
     camera.position.x = X / 2 + 3;
     camera.position.y = Y / 2 - 20;
@@ -118,7 +130,6 @@ window.onload = function() {
     renderer.domElement.addEventListener( 'touchend',  render, false );
     renderer.domElement.addEventListener( 'touchcancel',  render, false );
     renderer.domElement.addEventListener( 'wheel',  render, false );
-    const dummy = new THREE.Object3D();
 
     running = true;
     iRender = 0;
@@ -292,12 +303,6 @@ window.onload = function() {
         }
     }
 
-    for(let i = 0; i < N; i++) {
-        dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
-        dummy.updateMatrix();
-        mesh.setMatrixAt( i, dummy.matrix );
-    }
-    mesh.instanceMatrix.needsUpdate = true;
     render();
     animate();
 }
