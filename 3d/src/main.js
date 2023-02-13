@@ -34,17 +34,12 @@ window.onload = function() {
         scene.add(light);
     }
 
-    const cube_material = new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: false } );
-    let cube = new THREE.BoxGeometry(1,1,1);
-
     X = 10;
     Y = 10;
     Z = 10;
-    S = 2;
-    N = S*S*S;
-    let mesh = new THREE.InstancedMesh( cube, cube_material, N );
-    mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
-    scene.add( mesh );
+
+    const cube_material = new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: false } );
+    let cube = new THREE.BoxGeometry(1,1,1);
 
     let plane_material = new THREE.MeshStandardMaterial( { color: 0xCEEB87, wireframe: false, side: THREE.DoubleSide } );
     let plane_geometry = new THREE.PlaneGeometry(X, Y);
@@ -77,17 +72,34 @@ window.onload = function() {
 
     function p3(x, y, z) { return {x: x, y: y, z: z}; }
 
-    // add cubes at random unoccupied locations
     let pos = [];
-    for(let i = 0; i < N; i++) {
-        do {
-            x = X/2 - S/2 + Math.floor(Math.random() * S);
-            y = Y/2 - S/2 + Math.floor(Math.random() * S);
-            z = Z/2 - S/2 + Math.floor(Math.random() * S);
-        } while(grid[x][y][z] != 0);
-        grid[x][y][z] = 1;
-        pos[i] = p3(x, y, z);
+
+    function add_blob(x0, y0, z0, sx, sy, sz, id) {
+        let n_cubes_added = 0;
+        for(let x = x0; x < x0 + sx; x++) {
+            for(let y = y0; y < y0 + sy; y++) {
+                for(let z = z0; z < z0 + sz; z++) {
+                    if(grid[x][y][z] != 0) {
+                        console.log('Grid not empty at',x,y,z);
+                        throw -1;
+                    }
+                    grid[x][y][z] = id;
+                    pos.push( p3(x, y, z) );
+                    n_cubes_added++;
+                }
+            }
+        }
+        return n_cubes_added;
     }
+
+    // add some blobs
+    let N = 0;
+    N += add_blob(0,0,0,2,2,2,1);
+    N += add_blob(5,5,5,2,2,2,2);
+
+    let mesh = new THREE.InstancedMesh( cube, cube_material, N );
+    mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
+    scene.add( mesh );
 
     camera.position.x = X / 2 + 3;
     camera.position.y = Y / 2 - 20;
@@ -111,7 +123,6 @@ window.onload = function() {
     running = true;
     iRender = 0;
     steps_per_render = 1;
-    renders_per_step = 1;
 
     function render() {
         renderer.render( scene, camera );
@@ -158,10 +169,10 @@ window.onload = function() {
     }
 
     function find_connectivity(scratchpad, c, others, neighborhood, bounds) {
-        // fills scratchpad with 0 = empty, 1 = connected, 2 = disconnected for cubes in (c, others)
+        // fills scratchpad with 0 = empty/irrelevant, 1 = connected, 2 = disconnected for cubes in (c, others)
         for(let iNeighborhood = 0; iNeighborhood < neighborhood.length; iNeighborhood++) {
             let p = neighborhood[iNeighborhood];
-            scratchpad[p.x][p.y][p.z] = 0; // empty
+            scratchpad[p.x][p.y][p.z] = 0; // empty (or other id)
         }
         scratchpad[c.x][c.y][c.z] = 1; // connected
         for(let iOther = 0; iOther < others.length; iOther++) {
@@ -193,7 +204,9 @@ window.onload = function() {
             let p = neighborhood[iNeighborhood];
             if(grid[p.x][p.y][p.z] == 0)
                 move_candidates.push(p);
-            else if(p.x != pos[i].x || p.y != pos[i].y || p.z != pos[i].z)
+            else if( (p.x != pos[i].x || p.y != pos[i].y || p.z != pos[i].z) &&
+                     grid[p.x][p.y][p.z] == grid[pos[i].x][pos[i].y][pos[i].z] )
+                // non-empty slot and has same id as central cube
                 others.push(p);
         }
         // find which positions were connected to the central cube before any move
