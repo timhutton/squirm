@@ -37,18 +37,23 @@ window.onload = function() {
     const cube_material = new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: false } );
     let cube = new THREE.BoxGeometry(1,1,1);
 
-    X = 100;
-    Y = 100;
-    Z = 100;
-    S = 6;
+    X = 10;
+    Y = 10;
+    Z = 10;
+    S = 2;
     N = S*S*S;
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
 
-    //let bounding_box = new THREE.Mesh(new THREE.BoxGeometry(X, Y, Z), new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: true } ));
-    //bounding_box.position.set(X/2, Y/2, Z/2);
-    //scene.add( bounding_box );
+    let plane_material = new THREE.MeshStandardMaterial( { color: 0xCEEB87, wireframe: false, side: THREE.DoubleSide } );
+    let plane_geometry = new THREE.PlaneGeometry(X, Y);
+    let plane1 = new THREE.Mesh(plane_geometry, plane_material);
+    let plane2 = new THREE.Mesh(plane_geometry, plane_material);
+    plane1.position.set(X/2, Y/2, 0);
+    plane2.position.set(X/2, Y/2, Z);
+    scene.add( plane1 );
+    scene.add( plane2 );
 
     // initialize the occupancy grid, and two scratchpads
     grid = [];
@@ -76,18 +81,19 @@ window.onload = function() {
     let pos = [];
     for(let i = 0; i < N; i++) {
         do {
-            x = 47 + Math.floor(Math.random() * S);
-            y = 47 + Math.floor(Math.random() * S);
-            z = 47 + Math.floor(Math.random() * S);
+            x = X/2 - S/2 + Math.floor(Math.random() * S);
+            y = Y/2 - S/2 + Math.floor(Math.random() * S);
+            z = Z/2 - S/2 + Math.floor(Math.random() * S);
         } while(grid[x][y][z] != 0);
         grid[x][y][z] = 1;
         pos[i] = p3(x, y, z);
     }
 
-    orbit_controls = new THREE.OrbitControls( camera, renderer.domElement );
     camera.position.x = X / 2 + 3;
-    camera.position.y = Y / 2 + 1;
-    camera.position.z = Z/2 - 20;
+    camera.position.y = Y / 2 - 20;
+    camera.position.z = Z/2 + 1;
+    camera.up.set(0, 0, 1);
+    orbit_controls = new THREE.OrbitControls( camera, renderer.domElement );
     camera.lookAt( X/2, Y/2, Z/2 );
     orbit_controls.target.set( X/2, Y/2, Z/2 );
 
