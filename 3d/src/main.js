@@ -35,14 +35,14 @@ window.onload = function() {
         scene.add(light);
     }
     {
-        const color = 0x87CEEB;
+        const color = 0xFFFFFF;
         const intensity = 1;
         const light = new THREE.PointLight(color, intensity);
         light.position.set(400, -300, -300);
         scene.add(light);
     }
     {
-        const color = 0xEB87CE;
+        const color = 0xFFFFFF;
         const intensity = 1;
         const light = new THREE.PointLight(color, intensity);
         light.position.set(-400, -300, -300);
@@ -53,17 +53,38 @@ window.onload = function() {
     Y = 10;
     Z = 10;
 
-    const cube_material = new THREE.MeshStandardMaterial( { color: 0xffffff, wireframe: false } );
+    const cube_material = new THREE.MeshStandardMaterial( { color: 0xFFFFFF, wireframe: false } );
     let cube = new THREE.BoxGeometry(1,1,1);
 
-    let plane_material = new THREE.MeshStandardMaterial( { color: 0xCEEB87, wireframe: false, side: THREE.DoubleSide } );
-    let plane_geometry = new THREE.PlaneGeometry(X, Y);
-    let plane1 = new THREE.Mesh(plane_geometry, plane_material);
-    let plane2 = new THREE.Mesh(plane_geometry, plane_material);
-    plane1.position.set(X/2 - 0.5, Y/2 - 0.5, -0.5);
-    plane2.position.set(X/2 - 0.5, Y/2 - 0.5, Z - 0.5);
-    scene.add( plane1 );
-    scene.add( plane2 );
+    const vertices = new Float32Array( [
+        -0.5, -0.5, -0.5,
+        -0.5, Y-0.5, -0.5,
+
+        -0.5, Y-0.5, -0.5,
+        X-0.5, Y-0.5, -0.5,
+
+        X-0.5, Y-0.5, -0.5,
+        X-0.5, -0.5, -0.5,
+
+        X-0.5, -0.5, -0.5,
+        -0.5, -0.5, -0.5,
+
+        -0.5, -0.5, Z-0.5,
+        -0.5, Y-0.5, Z-0.5,
+
+        -0.5, Y-0.5, Z-0.5,
+        X-0.5, Y-0.5, Z-0.5,
+
+        X-0.5, Y-0.5, Z-0.5,
+        X-0.5, -0.5, Z-0.5,
+
+        X-0.5, -0.5, Z-0.5,
+        -0.5, -0.5, Z-0.5,
+    ] );
+    let lines_geometry = new THREE.BufferGeometry();
+    lines_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+    let lines = new THREE.LineSegments( lines_geometry, new THREE.LineBasicMaterial() );
+    scene.add( lines );
 
     // initialize the occupancy grid, and two scratchpads
     grid = [];
