@@ -1,4 +1,8 @@
 window.onload = function() {
+    let steps_text = document.createElement("p");
+    steps_text.innerHTML = "Steps: 0<br>Steps per render: 1";
+    document.body.appendChild(steps_text);
+
     const scene = new THREE.Scene();
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth * 0.8, window.innerHeight * 0.8 );
@@ -97,10 +101,10 @@ window.onload = function() {
     N += add_blob(0,0,0,3,3,3,1);
     N += add_blob(5,5,5,3,3,3,2);
 
+    // add blobs to scene
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
-
     const dummy = new THREE.Object3D();
     let colors = [new THREE.Color(0xEEBB88), new THREE.Color(0x544EEBB)];
     for(let i = 0; i < N; i++) {
@@ -111,7 +115,6 @@ window.onload = function() {
         mesh.setColorAt( i, colors[id - 1] );
     }
     mesh.instanceMatrix.needsUpdate = true;
-
 
     camera.position.x = X / 2 + 3;
     camera.position.y = Y / 2 - 20;
@@ -132,11 +135,12 @@ window.onload = function() {
     renderer.domElement.addEventListener( 'wheel',  render, false );
 
     running = true;
-    iRender = 0;
+    iStep = 0;
     steps_per_render = 1;
 
     function render() {
         renderer.render( scene, camera );
+        steps_text.innerHTML = "Steps: " + iStep + "<br>Steps per render: " + steps_per_render;
     }
 
     function get_neighborhood(i) {
@@ -271,8 +275,10 @@ window.onload = function() {
 
     function animate() {
         if(running) {
-            for(let iStep = 0; iStep < steps_per_render; iStep++)
+            for(let i = 0; i < steps_per_render; i++) {
                 move_cubes();
+                iStep++
+            }
             mesh.instanceMatrix.needsUpdate = true;
             render();
 
