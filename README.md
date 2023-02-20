@@ -11,6 +11,8 @@ https://user-images.githubusercontent.com/647092/216794674-185f8fe0-b187-4127-8a
 
 If I get time I will port the code to something more modern.
 
-## Experimental ##
+## Experimental implementation ##
 
 3D version: https://timhutton.github.io/squirm/3d
+
+2D version: https://timhutton.github.io/squirm/2d
