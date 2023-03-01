@@ -126,9 +126,13 @@ window.onload = function() {
     running = true;
     iStep = 0;
     steps_per_render = 1;
+    cubes_per_step = squirm_grid.num_cubes();
+    sleep_per_step = 0;
 
     function update_stats() {
-        steps_text.innerHTML = "Steps: " + iStep + "<br>Steps per render: " + steps_per_render;
+        steps_text.innerHTML = "Steps: " + iStep + "<br>Steps per render: " + steps_per_render
+            + "<br>Cubes per step: " + cubes_per_step
+            + "<br>Sleep per step: " + sleep_per_step + "ms";
     }
 
     function render() {
@@ -137,13 +141,14 @@ window.onload = function() {
     }
 
     function move_cubes() {
-        for(let i = 0; i < squirm_grid.num_cubes(); i++) {
-            let moved = squirm_grid.move_cube(i);
+        for(let i = 0; i < cubes_per_step; i++) {
+            let iCube = Math.floor(Math.random() * squirm_grid.num_cubes());
+            let moved = squirm_grid.move_cube(iCube);
             if(moved) {
-                let p = squirm_grid.cube_location(i);
+                let p = squirm_grid.cube_location(iCube);
                 dummy.position.set(p.x, p.y, p.z);
                 dummy.updateMatrix();
-                mesh.setMatrixAt( i, dummy.matrix );
+                mesh.setMatrixAt( iCube, dummy.matrix );
             }
         }
     }
@@ -157,7 +162,7 @@ window.onload = function() {
             mesh.instanceMatrix.needsUpdate = true;
             render();
 
-            requestAnimationFrame(animate);
+            setTimeout(() => { requestAnimationFrame(animate); }, sleep_per_step);
         }
     }
 
@@ -168,15 +173,29 @@ window.onload = function() {
     }
 
     function run_faster() {
-        steps_per_render *= 2;
+        if(sleep_per_step > 0) {
+            sleep_per_step = Math.max(sleep_per_step - 100, 0);
+        }
+        else if(cubes_per_step < squirm_grid.num_cubes()) {
+            cubes_per_step = Math.min(cubes_per_step + 10, squirm_grid.num_cubes());
+        }
+        else {
+            steps_per_render *= 2;
+        }
         update_stats();
     }
 
     function run_slower() {
         if(steps_per_render > 1) {
             steps_per_render /= 2;
-            update_stats();
         }
+        else if(cubes_per_step > 1) {
+            cubes_per_step = Math.max(cubes_per_step -10, 1);
+        }
+        else {
+            sleep_per_step += 100;
+        }
+        update_stats();
     }
 
     render();
