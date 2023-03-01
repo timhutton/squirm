@@ -49,92 +49,69 @@ window.onload = function() {
         scene.add(light);
     }
 
-    X = 20;
-    Y = 1;
-    Z = 20;
+    squirm_grid = new SquirmGrid(20, 1, 20);
 
     const cube_material = new THREE.MeshStandardMaterial( { color: 0xFFFFFF, wireframe: false } );
     let cube = new THREE.BoxGeometry(1,1,1);
 
+    xyz = squirm_grid.size();
     const vertices = new Float32Array( [
         -0.5, -0.5, -0.5,
-        -0.5, Y-0.5, -0.5,
+        -0.5, xyz.y-0.5, -0.5,
 
-        -0.5, Y-0.5, -0.5,
-        X-0.5, Y-0.5, -0.5,
+        -0.5, xyz.y-0.5, -0.5,
+        xyz.x-0.5, xyz.y-0.5, -0.5,
 
-        X-0.5, Y-0.5, -0.5,
-        X-0.5, -0.5, -0.5,
+        xyz.x-0.5, xyz.y-0.5, -0.5,
+        xyz.x-0.5, -0.5, -0.5,
 
-        X-0.5, -0.5, -0.5,
+        xyz.x-0.5, -0.5, -0.5,
         -0.5, -0.5, -0.5,
 
-        -0.5, -0.5, Z-0.5,
-        -0.5, Y-0.5, Z-0.5,
+        -0.5, -0.5, xyz.z-0.5,
+        -0.5, xyz.y-0.5, xyz.z-0.5,
 
-        -0.5, Y-0.5, Z-0.5,
-        X-0.5, Y-0.5, Z-0.5,
+        -0.5, xyz.y-0.5, xyz.z-0.5,
+        xyz.x-0.5, xyz.y-0.5, xyz.z-0.5,
 
-        X-0.5, Y-0.5, Z-0.5,
-        X-0.5, -0.5, Z-0.5,
+        xyz.x-0.5, xyz.y-0.5, xyz.z-0.5,
+        xyz.x-0.5, -0.5, xyz.z-0.5,
 
-        X-0.5, -0.5, Z-0.5,
-        -0.5, -0.5, Z-0.5,
+        xyz.x-0.5, -0.5, xyz.z-0.5,
+        -0.5, -0.5, xyz.z-0.5,
     ] );
     let lines_geometry = new THREE.BufferGeometry();
     lines_geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
     let lines = new THREE.LineSegments( lines_geometry, new THREE.LineBasicMaterial() );
     scene.add( lines );
 
-    // initialize the occupancy grid, and two scratchpads
-    grid = [];
-    pad = [];
-    pad2 = [];
-    for(let x = 0; x < X; x++) {
-        grid[x] = [];
-        pad[x] = [];
-        pad2[x] = [];
-        for(let y = 0; y < Y; y++) {
-            grid[x][y] = []
-            pad[x][y] = []
-            pad2[x][y] = []
-            for(let z = 0; z < Z; z++) {
-                grid[x][y][z] = 0;
-                pad[x][y][z] = 0;
-                pad2[x][y][z] = 0;
-            }
-        }
-    }
-
-    let cubes = [];
-
     // add some blobs
-    let N = 0;
-    N += add_blob(grid, cubes, 0, 0, 0, 10, 1, 10, 1);
-    N += add_blob(grid, cubes, 15, 0, 15, 3, 1, 3, 2);
+    squirm_grid.add_blob(0, 0, 0, 10, 1, 10, 1);
+    squirm_grid.add_blob(15, 0, 15, 3, 1, 3, 2);
 
     // add blobs to scene
-    let mesh = new THREE.InstancedMesh( cube, cube_material, N );
+    let mesh = new THREE.InstancedMesh( cube, cube_material, squirm_grid.num_cubes() );
     mesh.instanceMatrix.setUsage( THREE.DynamicDrawUsage ); // will be updated every frame
     scene.add( mesh );
     const dummy = new THREE.Object3D();
     let colors = [new THREE.Color(0xEEBB88), new THREE.Color(0x544EEBB)];
-    for(let i = 0; i < N; i++) {
-        dummy.position.set(cubes[i].x, cubes[i].y, cubes[i].z);
+    for(let i = 0; i < squirm_grid.num_cubes(); i++) {
+        let p = squirm_grid.cube_location(i);
+        dummy.position.set(p.x, p.y, p.z);
         dummy.updateMatrix();
         mesh.setMatrixAt( i, dummy.matrix );
-        let id = grid[cubes[i].x][cubes[i].y][cubes[i].z];
+        let id = squirm_grid.grid_at(p);
         mesh.setColorAt( i, colors[id - 1] );
     }
     mesh.instanceMatrix.needsUpdate = true;
 
-    camera.position.x = X / 2 + 3;
-    camera.position.y = Y / 2 - X;
-    camera.position.z = Z/2 + 1;
+    camera.position.x = xyz.x / 2 + 3;
+    camera.position.y = xyz.y / 2 - xyz.x;
+    camera.position.z = xyz.z/2 + 1;
     camera.up.set(0, 0, 1);
     orbit_controls = new THREE.OrbitControls( camera, renderer.domElement );
-    camera.lookAt( X/2, Y/2, Z/2 );
-    orbit_controls.target.set( X/2, Y/2, Z/2 );
+    camera.lookAt( xyz.x/2, xyz.y/2, xyz.z/2 );
+    orbit_controls.target.set( xyz.x/2, xyz.y/2, xyz.z/2 );
 
     renderer.domElement.addEventListener( 'mousemove', render, false );
     renderer.domElement.addEventListener( 'touchmove', render, false );
@@ -160,10 +137,11 @@ window.onload = function() {
     }
 
     function move_cubes() {
-        for(let i = 0; i < N; i++) {
-            let moved = move_cube(grid, cubes, i, pad, pad2);
+        for(let i = 0; i < squirm_grid.num_cubes(); i++) {
+            let moved = squirm_grid.move_cube(i);
             if(moved) {
-                dummy.position.set(cubes[i].x, cubes[i].y, cubes[i].z);
+                let p = squirm_grid.cube_location(i);
+                dummy.position.set(p.x, p.y, p.z);
                 dummy.updateMatrix();
                 mesh.setMatrixAt( i, dummy.matrix );
             }
