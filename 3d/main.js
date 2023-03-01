@@ -106,12 +106,12 @@ window.onload = function() {
         }
     }
 
-    let pos = [];
+    let cubes = [];
 
     // add some blobs
     let N = 0;
-    N += add_blob(grid, pos, 0, 0, 0, 3, 3, 3, 1);
-    N += add_blob(grid, pos, 5, 5, 5, 3, 3, 3, 2);
+    N += add_blob(grid, cubes, 0, 0, 0, 3, 3, 3, 1);
+    N += add_blob(grid, cubes, 5, 5, 5, 3, 3, 3, 2);
 
     // add blobs to scene
     let mesh = new THREE.InstancedMesh( cube, cube_material, N );
@@ -120,10 +120,10 @@ window.onload = function() {
     const dummy = new THREE.Object3D();
     let colors = [new THREE.Color(0xEEBB88), new THREE.Color(0x544EEBB)];
     for(let i = 0; i < N; i++) {
-        dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
+        dummy.position.set(cubes[i].x, cubes[i].y, cubes[i].z);
         dummy.updateMatrix();
         mesh.setMatrixAt( i, dummy.matrix );
-        let id = grid[pos[i].x][pos[i].y][pos[i].z];
+        let id = grid[cubes[i].x][cubes[i].y][cubes[i].z];
         mesh.setColorAt( i, colors[id - 1] );
     }
     mesh.instanceMatrix.needsUpdate = true;
@@ -208,20 +208,20 @@ window.onload = function() {
     function get_allowed_moves(i) {
         // collect the list of the places we can move to
         let neighborhood, bounds;
-        [neighborhood, bounds] = get_neighborhood(pos, i);
+        [neighborhood, bounds] = get_neighborhood(cubes[i]);
         let move_candidates = [];
         let others = [];
         for(let iNeighborhood = 0; iNeighborhood < neighborhood.length; iNeighborhood++) {
             let p = neighborhood[iNeighborhood];
             if(grid[p.x][p.y][p.z] == 0)
                 move_candidates.push(p);
-            else if( (p.x != pos[i].x || p.y != pos[i].y || p.z != pos[i].z) &&
-                     grid[p.x][p.y][p.z] == grid[pos[i].x][pos[i].y][pos[i].z] )
+            else if( (p.x != cubes[i].x || p.y != cubes[i].y || p.z != cubes[i].z) &&
+                     grid[p.x][p.y][p.z] == grid[cubes[i].x][cubes[i].y][cubes[i].z] )
                 // non-empty slot and has same id as central cube
                 others.push(p);
         }
         // find which positions were connected to the central cube before any move
-        find_connectivity(pad, pos[i], others, neighborhood, bounds);
+        find_connectivity(pad, cubes[i], others, neighborhood, bounds);
         // for each move candidate, see if it disconnects any cube
         let allowed_moves = [];
         for(let iMove = 0; iMove < move_candidates.length; iMove++) {
@@ -250,11 +250,11 @@ window.onload = function() {
         const iMove = Math.floor(Math.random() * allowed_moves.length);
         const move = allowed_moves[iMove];
         // move
-        grid[move.x][move.y][move.z] = grid[pos[i].x][pos[i].y][pos[i].z];
-        grid[pos[i].x][pos[i].y][pos[i].z] = 0;
-        pos[i].x = move.x;
-        pos[i].y = move.y;
-        pos[i].z = move.z;
+        grid[move.x][move.y][move.z] = grid[cubes[i].x][cubes[i].y][cubes[i].z];
+        grid[cubes[i].x][cubes[i].y][cubes[i].z] = 0;
+        cubes[i].x = move.x;
+        cubes[i].y = move.y;
+        cubes[i].z = move.z;
         return true;
     }
 
@@ -262,7 +262,7 @@ window.onload = function() {
         for(let i = 0; i < N; i++) {
             let moved = move_cube(i);
             if(moved) {
-                dummy.position.set(pos[i].x, pos[i].y, pos[i].z);
+                dummy.position.set(cubes[i].x, cubes[i].y, cubes[i].z);
                 dummy.updateMatrix();
                 mesh.setMatrixAt( i, dummy.matrix );
             }
