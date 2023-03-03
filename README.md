@@ -16,4 +16,11 @@ If I get time I will port the code to something more modern.
 3D version: https://timhutton.github.io/squirm/3d
 
 2D version drawing with ThreeJS cubes: https://timhutton.github.io/squirm/2d
+
 2D version drawing with javascript: https://timhutton.github.io/squirm/2d2
+
+## History ##
+
+2001: I made some java applets using this idea and wrote it up.
+
+2023: Kyle ([@rheophore](https://mathstodon.xyz/@rheophore@mastodon.lol)) [independently had the same idea](https://mathstodon.xyz/@rheophore@mastodon.lol/109806653635421662).
