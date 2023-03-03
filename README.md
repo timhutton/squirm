@@ -15,4 +15,5 @@ If I get time I will port the code to something more modern.
 
 3D version: https://timhutton.github.io/squirm/3d
 
-2D version: https://timhutton.github.io/squirm/2d
+2D version drawing with ThreeJS cubes: https://timhutton.github.io/squirm/2d
+2D version drawing with javascript: https://timhutton.github.io/squirm/2d2
